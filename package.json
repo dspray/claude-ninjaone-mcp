@@ -1,0 +1,17 @@
+{
+  "name": "claude-ninjaone-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PrecisionIT Azure Key Vault launcher wrapping @adamhancock/ninjarmm-mcp for the NinjaOne MCP connector. Reads NinjaOne OAuth credentials from Key Vault at runtime under the technician's az identity; no secrets in config.",
+  "bin": {
+    "ninjaone-launch": "mcp-keyvault-launch.js"
+  },
+  "scripts": {
+    "start": "node mcp-keyvault-launch.js"
+  },
+  "dependencies": {
+    "@adamhancock/ninjarmm-mcp": "0.1.11",
+    "@azure/identity": "^4.5.0",
+    "@azure/keyvault-secrets": "^4.9.0"
+  }
+}
