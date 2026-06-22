@@ -4,6 +4,10 @@
 # dependencies, and wires the `ninjaone` entry into Claude Desktop and Claude Code.
 # Backs up the Desktop config first. Idempotent — safe to re-run.
 # Config merge runs through node so it works on Windows PowerShell 5.1 and pwsh 7+.
+#
+# On MSIX/Store builds of Claude Desktop the config lives under
+# %LOCALAPPDATA%\Packages\<PackageFamilyName>\LocalCache\Roaming\Claude\ — this
+# script detects that path automatically via Resolve-DesktopConfigPath.
 
 $ErrorActionPreference = "Stop"
 
@@ -33,8 +37,17 @@ Push-Location $InstallDir
 npm ci
 Pop-Location
 
-# 4. Wire Claude Desktop config (node-based JSON merge; backs up first)
-$DesktopCfg = Join-Path $env:APPDATA "Claude\claude_desktop_config.json"
+# 4. Resolve Claude Desktop config path (handles MSIX/Store virtualized path)
+function Resolve-DesktopConfigPath {
+  $pkg = $null
+  try { $pkg = Get-AppxPackage -Name "Claude" -ErrorAction SilentlyContinue | Select-Object -First 1 } catch {}
+  if ($pkg) {
+    return (Join-Path $env:LOCALAPPDATA ("Packages\{0}\LocalCache\Roaming\Claude\claude_desktop_config.json" -f $pkg.PackageFamilyName))
+  }
+  return (Join-Path $env:APPDATA "Claude\claude_desktop_config.json")
+}
+
+$DesktopCfg = Resolve-DesktopConfigPath
 New-Item -ItemType Directory -Force -Path (Split-Path $DesktopCfg) | Out-Null
 if (Test-Path $DesktopCfg) {
   Copy-Item $DesktopCfg "$DesktopCfg.bak.$(Get-Date -Format yyyyMMddHHmmss)"
